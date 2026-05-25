@@ -1,8 +1,8 @@
-package com.notablogger.springxpose.sample.rest;
+package io.github.notablogger.springxpose.sample.rest;
 
-import com.notablogger.springxpose.sample.rest.entity.Category;
-import com.notablogger.springxpose.sample.rest.entity.Order;
-import com.notablogger.springxpose.sample.rest.entity.Product;
+import io.github.notablogger.springxpose.sample.rest.entity.Category;
+import io.github.notablogger.springxpose.sample.rest.entity.Order;
+import io.github.notablogger.springxpose.sample.rest.entity.Product;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.boot.CommandLineRunner;

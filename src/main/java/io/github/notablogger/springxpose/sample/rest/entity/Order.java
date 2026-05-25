@@ -1,8 +1,8 @@
-package com.notablogger.springxpose.sample.rest.entity;
+package io.github.notablogger.springxpose.sample.rest.entity;
 
-import com.notablogger.springxpose.annotation.AuthType;
-import com.notablogger.springxpose.annotation.ExposeEntity;
-import com.notablogger.springxpose.annotation.Operation;
+import io.github.notablogger.springxpose.annotation.AuthType;
+import io.github.notablogger.springxpose.annotation.ExposeEntity;
+import io.github.notablogger.springxpose.annotation.Operation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;

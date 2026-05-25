@@ -1,4 +1,4 @@
-package com.notablogger.springxpose.sample.rest;
+package io.github.notablogger.springxpose.sample.rest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

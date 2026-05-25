@@ -1,4 +1,4 @@
-package com.notablogger.springxpose.sample.rest.config;
+package io.github.notablogger.springxpose.sample.rest.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
