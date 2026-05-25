@@ -1,4 +1,4 @@
-package io.github.springxpose.sample.rest;
+package com.notablogger.springxpose.sample.rest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +11,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Integration tests verifying the public (no-auth) endpoints return 200.
- * Covers: Category, Product, Author, Article.
- */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -42,3 +38,4 @@ class PublicEndpointsTest {
         mvc.perform(get("/api/products/99999")).andExpect(status().isNotFound());
     }
 }
+

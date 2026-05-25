@@ -1,4 +1,4 @@
-package io.github.springxpose.sample.rest;
+package com.notablogger.springxpose.sample.rest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +15,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Tests for the Orders endpoint secured with HTTP Basic auth.
- * readRoles  = CUSTOMER, ADMIN
- * writeRoles = ADMIN only
- */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -52,7 +47,6 @@ class SecuredOrdersTest {
 
     @Test
     void admin_fullLifecycle() throws Exception {
-        // CREATE
         MvcResult result = mvc.perform(post("/api/orders")
                         .with(httpBasic("admin", "admin123"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -64,11 +58,9 @@ class SecuredOrdersTest {
                 .andReturn();
         long id = extractId(result.getResponse().getContentAsString());
 
-        // FIND BY ID as customer
         mvc.perform(get("/api/orders/" + id).with(httpBasic("customer", "customer123")))
                 .andExpect(status().isOk());
 
-        // UPDATE as admin
         mvc.perform(put("/api/orders/" + id)
                         .with(httpBasic("admin", "admin123"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +70,6 @@ class SecuredOrdersTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SHIPPED"));
 
-        // customer cannot update
         mvc.perform(put("/api/orders/" + id)
                         .with(httpBasic("customer", "customer123"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +78,6 @@ class SecuredOrdersTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        // DELETE as admin
         mvc.perform(delete("/api/orders/" + id).with(httpBasic("admin", "admin123")))
                 .andExpect(status().isNoContent());
     }

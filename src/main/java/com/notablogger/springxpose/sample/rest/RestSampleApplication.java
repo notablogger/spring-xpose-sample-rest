@@ -1,4 +1,4 @@
-package io.github.springxpose.sample.rest;
+package com.notablogger.springxpose.sample.rest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

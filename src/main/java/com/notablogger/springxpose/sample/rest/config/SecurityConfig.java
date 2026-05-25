@@ -1,4 +1,4 @@
-package io.github.springxpose.sample.rest.config;
+package com.notablogger.springxpose.sample.rest.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,21 +12,10 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.core.annotation.Order;
 
-/**
- * Fallback / default security chain.
- *
- * <p>Generated per-entity chains (from @ExposeEntity) use @Order(1xx) and match
- * only their own paths, so they take priority.  This chain covers everything else
- * (Swagger UI, H2 console, actuator, etc.) and permits it all for local dev.
- *
- * <p>It also declares the in-memory users needed by the Basic-auth secured
- * endpoints (Order and its chain).
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /** Low-priority fallback chain — permits Swagger UI, H2 console, etc. */
     @Bean
     @Order(1000)
     public SecurityFilterChain defaultChain(HttpSecurity http) throws Exception {
@@ -41,11 +30,10 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .csrf(csrf -> csrf.disable())
-            .headers(h -> h.frameOptions(fo -> fo.disable())); // H2 console uses iframes
+            .headers(h -> h.frameOptions(fo -> fo.disable()));
         return http.build();
     }
 
-    /** In-memory users for Basic-auth scenarios. */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         return new InMemoryUserDetailsManager(
@@ -69,3 +57,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+

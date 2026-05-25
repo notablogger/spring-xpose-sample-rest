@@ -1,8 +1,8 @@
-package io.github.springxpose.sample.rest;
+package com.notablogger.springxpose.sample.rest;
 
-import io.github.springxpose.sample.rest.entity.Category;
-import io.github.springxpose.sample.rest.entity.Order;
-import io.github.springxpose.sample.rest.entity.Product;
+import com.notablogger.springxpose.sample.rest.entity.Category;
+import com.notablogger.springxpose.sample.rest.entity.Order;
+import com.notablogger.springxpose.sample.rest.entity.Product;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.boot.CommandLineRunner;
@@ -82,3 +82,4 @@ public class DataLoader {
             """);
     }
 }
+

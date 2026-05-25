@@ -1,18 +1,12 @@
-package io.github.springxpose.sample.rest.entity;
+package com.notablogger.springxpose.sample.rest.entity;
 
-import io.github.springxpose.annotation.AuthType;
-import io.github.springxpose.annotation.ExposeEntity;
-import io.github.springxpose.annotation.Operation;
+import com.notablogger.springxpose.annotation.AuthType;
+import com.notablogger.springxpose.annotation.ExposeEntity;
+import com.notablogger.springxpose.annotation.Operation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 
-/**
- * Order — full CRUD, secured with HTTP Basic auth.
- * readRoles = CUSTOMER, ADMIN
- * writeRoles = ADMIN only
- * Relation to Product rendered as IDS_FOR_LIST_OBJECT_FOR_SINGLE (default).
- */
 @Entity
 @Table(name = "orders")
 @ExposeEntity(

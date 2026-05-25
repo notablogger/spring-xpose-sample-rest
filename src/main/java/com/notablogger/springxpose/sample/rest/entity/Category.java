@@ -1,15 +1,11 @@
-package io.github.springxpose.sample.rest.entity;
+package com.notablogger.springxpose.sample.rest.entity;
 
-import io.github.springxpose.annotation.ExposeEntity;
-import io.github.springxpose.annotation.Operation;
+import com.notablogger.springxpose.annotation.ExposeEntity;
+import com.notablogger.springxpose.annotation.Operation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 
-/**
- * Category — exposed with ALL operations, no auth (public).
- * Has a OneToMany relation to Product (relation NOT exposed — @JsonIgnore-style via RelationMode).
- */
 @Entity
 @ExposeEntity(
     path = "categories",

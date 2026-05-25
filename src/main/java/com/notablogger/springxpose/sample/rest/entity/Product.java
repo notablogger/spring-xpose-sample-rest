@@ -1,17 +1,12 @@
-package io.github.springxpose.sample.rest.entity;
+package com.notablogger.springxpose.sample.rest.entity;
 
-import io.github.springxpose.annotation.AuthType;
-import io.github.springxpose.annotation.ExposeEntity;
-import io.github.springxpose.annotation.Operation;
-import io.github.springxpose.annotation.RelationMode;
+import com.notablogger.springxpose.annotation.ExposeEntity;
+import com.notablogger.springxpose.annotation.Operation;
+import com.notablogger.springxpose.annotation.RelationMode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
-/**
- * Product — exposed with ALL operations, no auth, relation to Category
- * rendered as full OBJECT (RelationMode.ALWAYS_OBJECT).
- */
 @Entity
 @ExposeEntity(
     path = "products",

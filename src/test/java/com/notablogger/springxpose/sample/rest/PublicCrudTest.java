@@ -1,4 +1,4 @@
-package io.github.springxpose.sample.rest;
+package com.notablogger.springxpose.sample.rest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +15,6 @@ import static org.hamcrest.Matchers.isA;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Full CRUD lifecycle tests for public (no-auth) endpoints: Category and Product.
- */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -25,8 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PublicCrudTest {
 
     @Autowired MockMvc mvc;
-
-    // ── Category ─────────────────────────────────────────────────────────────
 
     @Test
     void category_create_returns201() throws Exception {
@@ -42,7 +37,6 @@ class PublicCrudTest {
 
     @Test
     void category_fullLifecycle() throws Exception {
-        // CREATE
         MvcResult result = mvc.perform(post("/api/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -52,17 +46,14 @@ class PublicCrudTest {
                 .andReturn();
         long id = extractId(result.getResponse().getContentAsString());
 
-        // FIND BY ID
         mvc.perform(get("/api/categories/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Books"));
 
-        // FIND ALL
         mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", isA(java.util.List.class)));
 
-        // UPDATE
         mvc.perform(put("/api/categories/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -71,16 +62,12 @@ class PublicCrudTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Books & Magazines"));
 
-        // DELETE
         mvc.perform(delete("/api/categories/" + id))
                 .andExpect(status().isNoContent());
 
-        // CONFIRM GONE
         mvc.perform(get("/api/categories/" + id))
                 .andExpect(status().isNotFound());
     }
-
-    // ── Product ───────────────────────────────────────────────────────────────
 
     @Test
     void product_create_returns201() throws Exception {
@@ -97,7 +84,6 @@ class PublicCrudTest {
 
     @Test
     void product_fullLifecycle() throws Exception {
-        // CREATE
         MvcResult result = mvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -107,12 +93,10 @@ class PublicCrudTest {
                 .andReturn();
         long id = extractId(result.getResponse().getContentAsString());
 
-        // FIND BY ID
         mvc.perform(get("/api/products/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.price").value(49.99));
 
-        // UPDATE
         mvc.perform(put("/api/products/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -121,16 +105,12 @@ class PublicCrudTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Gadget Pro"));
 
-        // DELETE
         mvc.perform(delete("/api/products/" + id))
                 .andExpect(status().isNoContent());
 
-        // CONFIRM GONE
         mvc.perform(get("/api/products/" + id))
                 .andExpect(status().isNotFound());
     }
-
-    // ── helper ────────────────────────────────────────────────────────────────
 
     private long extractId(String json) {
         int idx = json.indexOf("\"id\":");

@@ -16,11 +16,10 @@ dependencyResolutionManagement {
 // Remove this block and use mavenLocal() if you're consuming published artifacts.
 includeBuild('../spring-xpose') {
     dependencySubstitution {
-        substitute module('io.github.spring-xpose:spring-xpose-starter')    using project(':starter')
-        substitute module('io.github.spring-xpose:spring-xpose-processor')  using project(':processor')
-        substitute module('io.github.spring-xpose:spring-xpose-annotations') using project(':annotations')
+        substitute module('com.notablogger:spring-xpose-starter')    using project(':starter')
+        substitute module('com.notablogger:spring-xpose-processor')  using project(':processor')
+        substitute module('com.notablogger:spring-xpose-annotations') using project(':annotations')
     }
 }
 
 rootProject.name = 'spring-xpose-sample-rest'
-
