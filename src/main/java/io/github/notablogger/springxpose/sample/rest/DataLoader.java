@@ -6,31 +6,21 @@ import io.github.notablogger.springxpose.sample.rest.entity.Product;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Seeds the H2 database with representative data for every entity variant
- * so the Swagger UI is immediately usable after startup.
- */
-@Configuration
-public class DataLoader {
+@Component
+@Profile("!test")
+public class DataLoader implements CommandLineRunner {
 
     @PersistenceContext
     private EntityManager em;
 
-    @Bean
+    @Override
     @Transactional
-    @Profile("!test")
-    CommandLineRunner seed() {
-        return args -> loadData();
-    }
-
-    @Transactional
-    public void loadData() {
-        // ── Categories (no-auth, full CRUD, relation not serialised outward) ──
+    public void run(String... args) {
+        // ── Categories ──
         Category electronics = new Category();
         electronics.setName("Electronics");
         electronics.setDescription("Gadgets and devices");
@@ -41,7 +31,7 @@ public class DataLoader {
         books.setDescription("Fiction and non-fiction");
         em.persist(books);
 
-        // ── Products (no-auth, full CRUD, relation ALWAYS_OBJECT) ──
+        // ── Products ──
         Product laptop = new Product();
         laptop.setName("Laptop Pro");
         laptop.setPrice(1299.99);
@@ -56,7 +46,7 @@ public class DataLoader {
         novel.setCategory(books);
         em.persist(novel);
 
-        // ── Orders (Basic auth, CUSTOMER/ADMIN roles, relation default mode) ──
+        // ── Orders ──
         Order o1 = new Order();
         o1.setReference("ORD-0001");
         o1.setTotalAmount(1299.99);
@@ -82,4 +72,3 @@ public class DataLoader {
             """);
     }
 }
-

@@ -1,5 +1,6 @@
 package io.github.notablogger.springxpose.sample.rest.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.notablogger.springxpose.annotation.ExposeEntity;
 import io.github.notablogger.springxpose.annotation.Operation;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ public class Category {
 
     private String description;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Product> products;
 
@@ -37,4 +39,3 @@ public class Category {
     public List<Product> getProducts() { return products; }
     public void setProducts(List<Product> products) { this.products = products; }
 }
-

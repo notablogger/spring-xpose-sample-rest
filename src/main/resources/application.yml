@@ -32,6 +32,7 @@ springdoc:
 spring-xpose:
   mode: REST
 
+
 server:
   port: 8080
 
