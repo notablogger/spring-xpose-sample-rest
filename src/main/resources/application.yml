@@ -31,8 +31,11 @@ springdoc:
 
 spring-xpose:
   mode: REST
+  api:
+    title: "spring-xpose Sample REST API"
+    description: "Demo app showcasing auto-generated CRUD endpoints via @ExposeEntity"
+    version: "0.1.2"
 
 
 server:
   port: 8080
-
