@@ -45,17 +45,21 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** In-memory users for Basic-auth scenarios (Order entity). */
+    /** In-memory users for Basic-auth scenarios. */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         return new InMemoryUserDetailsManager(
+            User.withUsername("user")
+                .password(encoder.encode("user123"))
+                .roles("USER")
+                .build(),
             User.withUsername("customer")
                 .password(encoder.encode("customer123"))
                 .roles("CUSTOMER")
                 .build(),
             User.withUsername("admin")
                 .password(encoder.encode("admin123"))
-                .roles("ADMIN")
+                .roles("ADMIN", "USER", "CUSTOMER")
                 .build()
         );
     }
@@ -65,4 +69,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
