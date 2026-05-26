@@ -1,0 +1,11 @@
+# Overrides for the test profile.
+# Provides a dummy JWKS URI so Spring Boot can construct the JwtDecoder bean
+# without hitting a real authorization server. The actual decoder bean is
+# replaced by a no-op mock in TestJwtDecoderConfig, so this URI is never called.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwks-uri: http://localhost:9999/.well-known/jwks.json
+
