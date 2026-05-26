@@ -1,15 +1,29 @@
-# The JAR must be built before this image is built:
-#   ./gradlew bootJar -x test
-#   docker build -t spring-xpose-sample-rest .
-#
-# In CI the Gradle build runs on the runner (where ../spring-xpose is available
-# via the composite build), then the pre-built JAR is copied into this image.
+# Multi-stage build: build the application, then run it
 
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /build
+
+# Copy gradle wrapper and build files
+COPY gradlew .
+COPY gradlew.bat .
+COPY gradle gradle/
+COPY build.gradle .
+COPY settings.gradle .
+COPY src src/
+
+# Copy spring-xpose from parent directory for composite build
+COPY ../spring-xpose /build/../spring-xpose
+
+# Build the application
+RUN chmod +x gradlew && \
+    ./gradlew clean bootJar -x test --no-daemon
+
+# Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
+COPY --from=builder /build/build/libs/*.jar app.jar
 
 EXPOSE 8080
 

@@ -162,6 +162,47 @@ Example response body:
 
 `spring-xpose` intentionally does not return raw SQL/constraint names in API responses.
 
+In this sample, constraint violations are sanitized by a local override in
+`src/main/java/io/github/notablogger/springxpose/sample/rest/config/SampleExceptionHandler.java`.
+That lets the sample keep the server-side stack trace in logs while returning a safe API payload.
+
+---
+
+## Exception handling
+
+`spring-xpose` ships with a global exception handler in
+`spring-xpose` starter: `SpringXposeExceptionHandler`.
+
+### Exceptions handled by the library
+
+| Exception type | Status | Problem type | What it means |
+|---|---:|---|---|
+| `HttpMessageNotReadableException` | `400` | `urn:springxpose:malformed-body` | The JSON body is malformed or cannot be parsed |
+| `MethodArgumentNotValidException` | `400` | `urn:springxpose:validation-error` | Bean validation failed (`@NotBlank`, `@Positive`, `@Size`, etc.) |
+| `EntityNotFoundException` | `422` | `urn:springxpose:relation-not-found` | A relation ID in the request points to an entity that does not exist |
+| `DataIntegrityViolationException` | `409` | `urn:springxpose:constraint-violation` | A database constraint failed (duplicate key, FK violation, NOT NULL, etc.) |
+| `OptimisticLockingFailureException` | `409` | `urn:springxpose:optimistic-lock` | Two requests updated the same versioned row concurrently |
+
+### Sample-specific override
+
+The sample app adds its own `@RestControllerAdvice` in
+`SampleExceptionHandler` to override the library behavior for
+`DataIntegrityViolationException`.
+
+Why the override exists:
+
+- to guarantee no raw SQL or constraint names leak to API clients
+- to return a stable `errorCode` (`CONSTRAINT_VIOLATION`)
+- to keep detailed exception information in server logs only
+
+The sample currently overrides:
+
+| Exception type | Defined in | Behavior |
+|---|---|---|
+| `DataIntegrityViolationException` | `spring-xpose-sample-rest` | Returns a sanitized `409` payload with generic conflict details |
+
+All other exception types continue to use the default handler from the `spring-xpose` starter.
+
 ---
 
 ## Step 4 — See the generated code
@@ -241,6 +282,7 @@ src/main/java/.../
   RestSampleApplication.java      ← @SpringBootApplication entry point
   DataLoader.java                 ← Seeds H2 with demo data on startup
   config/
+    SampleExceptionHandler.java   ← Sample override for sanitized constraint violation responses
     SecurityConfig.java           ← Fallback chain (Swagger UI, H2 console)
   entity/
     Category.java                 ← @ExposeEntity, public, full CRUD
