@@ -1,20 +1,15 @@
-# ── Build stage ──────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jdk-alpine AS build
-WORKDIR /workspace
+# The JAR must be built before this image is built:
+#   ./gradlew bootJar -x test
+#   docker build -t spring-xpose-sample-rest .
+#
+# In CI the Gradle build runs on the runner (where ../spring-xpose is available
+# via the composite build), then the pre-built JAR is copied into this image.
 
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
-COPY src src
-
-RUN chmod +x gradlew && ./gradlew bootJar -x test --no-daemon
-
-# ── Runtime stage ─────────────────────────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-COPY --from=build /workspace/build/libs/*.jar app.jar
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} app.jar
 
 EXPOSE 8080
 
