@@ -32,7 +32,8 @@ class PublicCrudTest {
                         """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Electronics"));
+                // CustomCategoryMapper upper-cases names in responses (demo of custom mapping)
+                .andExpect(jsonPath("$.name").value("ELECTRONICS"));
     }
 
     @Test
@@ -48,7 +49,8 @@ class PublicCrudTest {
 
         mvc.perform(get("/api/categories/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Books"));
+                // CustomCategoryMapper upper-cases name in response
+                .andExpect(jsonPath("$.name").value("BOOKS"));
 
         mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
@@ -60,7 +62,7 @@ class PublicCrudTest {
                                 {"name":"Books & Magazines","description":"Updated"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Books & Magazines"));
+                .andExpect(jsonPath("$.name").value("BOOKS & MAGAZINES"));
 
         mvc.perform(delete("/api/categories/" + id))
                 .andExpect(status().isNoContent());
@@ -120,4 +122,3 @@ class PublicCrudTest {
         return Long.parseLong(json.substring(start, end).trim());
     }
 }
-

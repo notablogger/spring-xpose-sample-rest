@@ -3,6 +3,7 @@ package io.github.notablogger.springxpose.sample.rest.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.notablogger.springxpose.annotation.ExposeEntity;
 import io.github.notablogger.springxpose.annotation.Operation;
+import io.github.notablogger.springxpose.sample.rest.mapper.CustomCategoryMapper;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
@@ -10,7 +11,8 @@ import java.util.List;
 @Entity
 @ExposeEntity(
     path = "categories",
-    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE}
+    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE},
+    customMapper = CustomCategoryMapper.class
 )
 public class Category {
 
