@@ -11,7 +11,8 @@ import jakarta.validation.constraints.Positive;
 @ExposeEntity(
     path = "products",
     expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE},
-    relationMode = RelationMode.ALWAYS_OBJECT
+    relationMode = RelationMode.ALWAYS_OBJECT,
+    ignoredFields = {"description"}   // description stored in DB but not exposed via API
 )
 public class Product {
 
@@ -46,4 +47,3 @@ public class Product {
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 }
-
