@@ -13,6 +13,7 @@ Three real-world entity scenarios, each demonstrating a different spring-xpose c
 | `Category` | None (public) | — | — | — | Zero-config public CRUD |
 | `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | Relation as full object; field hidden from API |
 | `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | Role-based read/write split |
+| `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | JWT-protected CRUD and role-based access |
 
 No controllers, repositories, DTOs, mappers, or security configs were written by hand. Everything is generated at compile time.
 
@@ -127,6 +128,39 @@ curl -i -u customer:customer123 \
   -d '{"reference":"ORD-HACK","totalAmount":0,"status":"FREE"}'
 # → 403 Forbidden
 ```
+
+**Reports without bearer token — expect 401:**
+```bash
+curl -i http://localhost:8080/api/reports
+# → 401 Unauthorized
+```
+
+**Reports with bearer token (local profile) — expect 200:**
+```bash
+curl -i -H 'Authorization: Bearer local-test-token' http://localhost:8080/api/reports
+# → 200 OK
+```
+
+**Invalid relation (example: `productId` does not exist) — expect sanitized 409:**
+```bash
+curl -i -u admin:admin123 \
+  -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"reference":"ORD-BAD","totalAmount":10.0,"status":"NEW","productId":0}'
+```
+
+Example response body:
+```json
+{
+  "type": "urn:springxpose:constraint-violation",
+  "title": "Data integrity violation",
+  "status": 409,
+  "detail": "The request conflicts with existing data. Verify referenced IDs and unique values.",
+  "errorCode": "CONSTRAINT_VIOLATION"
+}
+```
+
+`spring-xpose` intentionally does not return raw SQL/constraint names in API responses.
 
 ---
 
