@@ -40,6 +40,26 @@ cd spring-xpose-sample-rest
 ./gradlew bootRun
 ```
 
+### Local profile (easy OAuth testing)
+
+If you want to test `/api/reports` locally without configuring a real JWKS provider, run with the `local` profile:
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+Then call secured report endpoints with any bearer token:
+
+```bash
+curl -i -H 'Authorization: Bearer local-test-token' http://localhost:8080/api/reports
+
+curl -i \
+  -H 'Authorization: Bearer local-test-token' \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Local Report","content":"manual","score":1.0}' \
+  http://localhost:8080/api/reports
+```
+
 On first run Gradle downloads dependencies from Maven Central. The app starts on port `8080` and seeds the H2 database with demo data.
 
 You will see in the logs:
