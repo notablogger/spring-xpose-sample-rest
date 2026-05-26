@@ -12,14 +12,4 @@ dependencyResolutionManagement {
     }
 }
 
-// Composite build: resolves spring-xpose artifacts from the local source tree.
-// Remove this block and bump versions to published when consuming from Maven Central.
-includeBuild('../spring-xpose') {
-    dependencySubstitution {
-        substitute module('io.github.notablogger:spring-xpose-starter')     using project(':starter')
-        substitute module('io.github.notablogger:spring-xpose-processor')   using project(':processor')
-        substitute module('io.github.notablogger:spring-xpose-annotations') using project(':annotations')
-    }
-}
-
 rootProject.name = 'spring-xpose-sample-rest'

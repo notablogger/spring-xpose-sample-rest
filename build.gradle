@@ -17,9 +17,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.notablogger:spring-xpose-starter:0.1.0-SNAPSHOT'
-    annotationProcessor 'io.github.notablogger:spring-xpose-processor:0.1.0-SNAPSHOT'
-    compileOnly 'io.github.notablogger:spring-xpose-annotations:0.1.0-SNAPSHOT'
+    implementation 'io.github.notablogger:spring-xpose-starter:0.1.5'
+    annotationProcessor 'io.github.notablogger:spring-xpose-processor:0.1.5'
+    compileOnly 'io.github.notablogger:spring-xpose-annotations:0.1.5'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
 
     // MapStruct processor — needed to compile the generated *Mapper interfaces at build time
