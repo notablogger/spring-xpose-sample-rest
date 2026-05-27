@@ -3,6 +3,23 @@
 # without hitting a real authorization server. The actual decoder bean is
 # replaced by a no-op mock in TestJwtDecoderConfig, so this URI is never called.
 spring:
+  datasource:
+    url: jdbc:h2:mem:restdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/sql/schema.sql
+      data-locations: classpath:db/sql/data.sql
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/xpose-test}
   security:
     oauth2:
       resourceserver:

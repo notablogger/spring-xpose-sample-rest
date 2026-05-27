@@ -1,19 +1,51 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: spring-xpose-postgres
+    environment:
+      POSTGRES_DB: xpose
+      POSTGRES_USER: xpose
+      POSTGRES_PASSWORD: xpose
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xpose -d xpose"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    container_name: spring-xpose-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker/mongo/init-notes.js:/docker-entrypoint-initdb.d/init-notes.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   rest-sample:
     build: .
     container_name: spring-xpose-sample-rest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:h2:mem:restdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD:
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
-      SPRING_H2_CONSOLE_ENABLED: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xpose
+      SPRING_DATASOURCE_USERNAME: xpose
+      SPRING_DATASOURCE_PASSWORD: xpose
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/xpose
       SERVER_PORT: 8080
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/v3/api-docs || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3

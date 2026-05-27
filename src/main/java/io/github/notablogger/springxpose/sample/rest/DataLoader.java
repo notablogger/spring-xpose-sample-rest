@@ -12,7 +12,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
-@Profile("!test")
+@Profile("legacy-seed")
 public class DataLoader implements CommandLineRunner {
 
     @PersistenceContext
@@ -74,10 +74,9 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("""
 
             =========================================================
-              spring-xpose REST sample started
+              spring-xpose REST sample started (legacy-seed profile)
               Swagger UI  → http://localhost:8080/swagger-ui.html
-              H2 console  → http://localhost:8080/h2-console
-              JDBC URL    → jdbc:h2:mem:restdb
+              Relational DB seeded via legacy DataLoader
             =========================================================
             """);
     }

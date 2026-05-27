@@ -22,6 +22,7 @@ No controllers, repositories, DTOs, mappers, or security configs were written by
 ## Prerequisites
 
 - Java 21+
+- Docker (for real Postgres + Mongo via Compose)
 - Gradle (wrapper included — no install needed)
 
 ---
@@ -35,7 +36,29 @@ cd spring-xpose-sample-rest
 
 ---
 
-## Step 2 — Run
+## Step 2 — Start databases (real services)
+
+```bash
+docker compose up -d postgres mongo
+```
+
+By default this starts:
+
+- PostgreSQL at `localhost:5432` (`db: xpose`, `user: xpose`, `password: xpose`)
+- MongoDB at `localhost:27017` (`db: xpose`)
+
+PostgreSQL schema + sample relational data are applied from startup SQL scripts (`db/sql/schema.sql` and `db/sql/data.sql`). Mongo `notes` sample documents are initialized by `docker/mongo/init-notes.js`.
+
+If you want a fully fresh seed state, recreate containers and volumes first:
+
+```bash
+docker compose down -v
+docker compose up -d postgres mongo
+```
+
+---
+
+## Step 3 — Run the app
 
 ```bash
 ./gradlew bootRun
@@ -61,7 +84,17 @@ curl -i \
   http://localhost:8080/api/reports
 ```
 
-On first run Gradle downloads dependencies from Maven Central. The app starts on port `8080` and seeds the H2 database with demo data.
+If your databases are not on default ports/credentials, pass env vars before running:
+
+```bash
+export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/xpose'
+export SPRING_DATASOURCE_USERNAME='xpose'
+export SPRING_DATASOURCE_PASSWORD='xpose'
+export SPRING_DATA_MONGODB_URI='mongodb://localhost:27017/xpose'
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+On first run Gradle downloads dependencies from Maven Central. The app starts on port `8080`.
 
 You will see in the logs:
 
@@ -69,14 +102,14 @@ You will see in the logs:
 =========================================================
   spring-xpose REST sample started
   Swagger UI  → http://localhost:8080/swagger-ui.html
-  H2 console  → http://localhost:8080/h2-console
-  JDBC URL    → jdbc:h2:mem:restdb
+  JDBC URL    → jdbc:postgresql://localhost:5432/xpose
+  Mongo URI   → mongodb://localhost:27017/xpose
 =========================================================
 ```
 
 ---
 
-## Step 3 — Explore the API
+## Step 4 — Explore the API
 
 ### Option A — Swagger UI
 
@@ -97,6 +130,12 @@ curl http://localhost:8080/api/categories
 ```bash
 curl http://localhost:8080/api/products
 # → [{"id":1,"name":"Laptop Pro","price":1299.99,"category":{"id":1,"name":"Electronics",...}}, ...]
+```
+
+**List notes from MongoDB (public):**
+```bash
+curl http://localhost:8080/api/notes
+# → [{"id":"...","title":"Welcome Note","content":"...","author":"system"}, ...]
 ```
 
 **Orders without auth — expect 401:**
@@ -205,7 +244,7 @@ All other exception types continue to use the default handler from the `spring-x
 
 ---
 
-## Step 4 — See the generated code
+## Step 5 — See the generated code
 
 After `./gradlew build`, open:
 
@@ -240,7 +279,7 @@ These are real `.java` files — open them in your IDE, read them, set breakpoin
 
 ---
 
-## Step 5 — Understand `ignoredFields`
+## Step 6 — Understand `ignoredFields`
 
 Open `Product.java`:
 
@@ -280,15 +319,23 @@ The generated `ProductDto` contains `id`, `name`, `price`, and `category` — bu
 ```
 src/main/java/.../
   RestSampleApplication.java      ← @SpringBootApplication entry point
-  DataLoader.java                 ← Seeds H2 with demo data on startup
+  DataLoader.java                 ← Legacy runner (disabled by default; SQL init scripts now seed relational data)
   config/
     SampleExceptionHandler.java   ← Sample override for sanitized constraint violation responses
-    SecurityConfig.java           ← Fallback chain (Swagger UI, H2 console)
+    SecurityConfig.java           ← Fallback chain (Swagger UI + docs)
   entity/
     Category.java                 ← @ExposeEntity, public, full CRUD
     Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, ignoredFields
     Order.java                    ← @ExposeEntity, Basic auth, role-split
 ```
+
+src/main/resources/
+  db/sql/
+    schema.sql                    ← Relational schema for PostgreSQL/H2
+    data.sql                      ← Relational sample data
+
+docker/mongo/
+  init-notes.js                   ← Mongo sample notes seed script
 
 ---
 
@@ -298,7 +345,16 @@ src/main/java/.../
 |---|---|
 | http://localhost:8080/swagger-ui.html | Swagger UI — try all endpoints interactively |
 | http://localhost:8080/v3/api-docs | Raw OpenAPI JSON spec |
-| http://localhost:8080/h2-console | H2 console — JDBC URL: `jdbc:h2:mem:restdb` |
+
+---
+
+## Optional: run everything in Docker
+
+```bash
+docker compose up --build
+```
+
+This launches `postgres`, `mongo`, and `rest-sample` together.
 
 ---
 

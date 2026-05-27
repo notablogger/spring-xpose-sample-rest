@@ -1,18 +1,23 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:restdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/xpose}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:xpose}
+    password: ${SPRING_DATASOURCE_PASSWORD:xpose}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/sql/schema.sql
+      data-locations: classpath:db/sql/data.sql
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/xpose}
+      auto-index-creation: true
   # OAuth2 resource server — disabled by default in this sample.
   # Uncomment and point to your JWKS URI to enable JWT validation on /api/reports.
   # security:
