@@ -12,8 +12,6 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src src/
 
-# Copy spring-xpose from parent directory for composite build
-COPY ../spring-xpose /build/../spring-xpose
 
 # Build the application
 RUN chmod +x gradlew && \
