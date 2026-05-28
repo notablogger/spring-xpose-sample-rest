@@ -17,8 +17,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.notablogger:spring-xpose-starter:1.0.1'
-    annotationProcessor 'io.github.notablogger:spring-xpose-processor:1.0.1'
+    implementation 'io.github.notablogger:spring-xpose-starter:2.0.0'
+    annotationProcessor 'io.github.notablogger:spring-xpose-processor:2.0.0'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     annotationProcessor 'org.springframework.data:spring-data-commons'  // for @org.springframework.data.annotation.Id in processor
 
