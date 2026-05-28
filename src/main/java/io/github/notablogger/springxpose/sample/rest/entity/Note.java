@@ -1,28 +1,25 @@
 package io.github.notablogger.springxpose.sample.rest.entity;
 
-import io.github.notablogger.springxpose.annotation.ExposeEntity;
 import io.github.notablogger.springxpose.annotation.AuthType;
-import io.github.notablogger.springxpose.annotation.StoreType;
+import io.github.notablogger.springxpose.annotation.ExposeDocument;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Example entity backed by MongoDB.
+ * Sample MongoDB document class exposed via spring-xpose.
  *
- * <p>Demonstrates {@code @ExposeEntity(store = StoreType.MONGO)}:
+ * <p>Demonstrates {@code @ExposeDocument} — the MongoDB-native annotation:
  * <ul>
- *   <li>Uses {@code @org.springframework.data.annotation.Id} (not Jakarta Persistence)</li>
- *   <li>spring-xpose generates a {@code MongoRepository} instead of {@code JpaRepository}</li>
- *   <li>No {@code EntityManager} is injected — no JPA transactions</li>
- *   <li>Public CRUD — no auth required</li>
+ *   <li>Uses {@code @org.springframework.data.annotation.Id} (not Jakarta Persistence).</li>
+ *   <li>spring-xpose generates a {@code MongoRepository} instead of {@code JpaRepository}.</li>
+ *   <li>No {@code EntityManager} is injected — no JPA transactions.</li>
  * </ul>
  */
 @Document(collection = "notes")
-@ExposeEntity(
-    path  = "notes",
-    store = StoreType.MONGO,
-	 authType = AuthType.BASIC,
+@ExposeDocument(
+    path       = "notes",
+    authType   = AuthType.BASIC,
     readRoles  = {"CUSTOMER", "ADMIN"},
     writeRoles = {"ADMIN"}
 )
