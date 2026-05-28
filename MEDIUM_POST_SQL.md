@@ -11,7 +11,7 @@ If your Spring Boot service has more than a few SQL entities, you already know t
 
 Then repeat for every table.
 
-This article shows a practical SQL-first workflow using **`spring-xpose` 3.0.0** where one annotation drives compile-time generation of that repetitive layer.
+This article shows a practical SQL-first workflow using **`spring-xpose` 3.0.1** where one annotation drives compile-time generation of that repetitive layer.
 
 ---
 

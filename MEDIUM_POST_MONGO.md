@@ -178,7 +178,7 @@ curl -i -u admin:admin123 -X POST http://localhost:8080/api/notes \
 
 ## Final take
 
-`@ExposeDocument` in `spring-xpose` 3.0.0 gives MongoDB document classes their own first-class annotation — aligned with the MongoDB vocabulary and free of misleading JPA terminology. For teams shipping many CRUD endpoints across mixed persistence stacks, this keeps API and security conventions consistent and immediately readable.
+`@ExposeDocument` in `spring-xpose` 3.0.1 gives MongoDB document classes their own first-class annotation — aligned with the MongoDB vocabulary and free of misleading JPA terminology. For teams shipping many CRUD endpoints across mixed persistence stacks, this keeps API and security conventions consistent and immediately readable.
 
 ---
 
