@@ -1,12 +1,12 @@
 # spring-xpose-sample-rest
 
-A runnable Spring Boot sample demonstrating **[spring-xpose](https://github.com/notablogger/spring-xpose)** — a library that generates full REST APIs (repository, DTO, mapper, controller, security) from a single `@ExposeEntity` annotation at compile time.
+A runnable Spring Boot sample demonstrating **[spring-xpose](https://github.com/notablogger/spring-xpose)** — a library that generates full REST APIs (repository, DTO, request DTO, mapper, controller, security) from a single annotation at compile time (`@ExposeEntity` for JPA and `@ExposeDocument` for MongoDB).
 
 ---
 
 ## What this sample shows
 
-Three real-world entity scenarios, each demonstrating a different spring-xpose configuration:
+Five real-world scenarios, each demonstrating a different spring-xpose configuration:
 
 | Entity | Auth | Roles | Relation mode | `ignoredFields` | What it demonstrates |
 |---|---|---|---|---|---|
@@ -14,8 +14,9 @@ Three real-world entity scenarios, each demonstrating a different spring-xpose c
 | `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | Relation as full object; field hidden from API |
 | `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | Role-based read/write split |
 | `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | JWT-protected CRUD and role-based access |
+| `Note` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | — | — | MongoDB document CRUD via `@ExposeDocument` |
 
-No controllers, repositories, DTOs, mappers, or security configs were written by hand. Everything is generated at compile time.
+No controllers, repositories, DTOs, request DTOs, mappers, or security configs were written by hand. Everything is generated at compile time.
 
 ---
 
@@ -132,10 +133,16 @@ curl http://localhost:8080/api/products
 # → [{"id":1,"name":"Laptop Pro","price":1299.99,"category":{"id":1,"name":"Electronics",...}}, ...]
 ```
 
-**List notes from MongoDB (public):**
+**List notes from MongoDB as customer (Basic auth):**
 ```bash
-curl http://localhost:8080/api/notes
+curl -u customer:customer123 http://localhost:8080/api/notes
 # → [{"id":"...","title":"Welcome Note","content":"...","author":"system"}, ...]
+```
+
+**Notes without auth — expect 401:**
+```bash
+curl -i http://localhost:8080/api/notes
+# → 401 Unauthorized
 ```
 
 **Orders without auth — expect 401:**
@@ -253,26 +260,36 @@ build/generated/sources/annotationProcessor/java/main/
   io/github/notablogger/springxpose/sample/rest/entity/generated/
 ```
 
-You will find **five** generated files per entity:
+You will find **six** generated files per entity:
 
 ```
 CategoryRepository.java          ← JpaRepository<Category, Long>
 CategoryDto.java                 ← clean response shape (no JPA annotations)
-CategoryMapper.java              ← MapStruct: toDto(), toDtoList()
+CategoryRequestDto.java          ← request body shape for CREATE/UPDATE
+CategoryMapper.java              ← MapStruct: toDto(), toDtoList(), toEntity(), updateEntity()
 CategoryController.java          ← @RestController at /api/categories
 CategorySecurityConfigurer.java  ← permitAll() SecurityFilterChain
 
 ProductRepository.java
 ProductDto.java                  ← no 'description' field (ignoredFields = {"description"})
+ProductRequestDto.java
 ProductMapper.java
 ProductController.java
 ProductSecurityConfigurer.java
 
 OrderRepository.java
 OrderDto.java                    ← productId: Long (IDS mode for list)
+OrderRequestDto.java
 OrderMapper.java                 ← @Mapping(source="product.id", target="productId")
 OrderController.java             ← @RestController at /api/orders
 OrderSecurityConfigurer.java     ← Basic auth, CUSTOMER/ADMIN roles
+
+NoteRepository.java              ← MongoRepository<Note, String>
+NoteDto.java
+NoteRequestDto.java
+NoteMapper.java
+NoteController.java              ← @RestController at /api/notes
+NoteSecurityConfigurer.java      ← Basic auth, CUSTOMER/ADMIN roles
 ```
 
 These are real `.java` files — open them in your IDE, read them, set breakpoints.
@@ -305,7 +322,7 @@ The generated `ProductDto` contains `id`, `name`, `price`, and `category` — bu
 
 ## Credentials
 
-### HTTP Basic (for `/api/orders`)
+### HTTP Basic (for `/api/orders` and `/api/notes`)
 
 | Username | Password | Role | Access |
 |---|---|---|---|
@@ -326,7 +343,8 @@ src/main/java/.../
     Category.java                 ← @ExposeEntity, public, full CRUD
     Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, ignoredFields
     Order.java                    ← @ExposeEntity, Basic auth, role-split
-```
+    Report.java                   ← @ExposeEntity, OAuth2/JWT role-split
+    Note.java                     ← @ExposeDocument, MongoDB + Basic auth role-split
 
 src/main/resources/
   db/sql/
@@ -334,6 +352,7 @@ src/main/resources/
 
 docker/mongo/
   init-notes.js                   ← Mongo sample notes seed script
+```
 
 ---
 
@@ -397,4 +416,3 @@ The sample app demonstrates the library's capabilities. To deploy a real service
 ## License
 
 Apache 2.0
-
