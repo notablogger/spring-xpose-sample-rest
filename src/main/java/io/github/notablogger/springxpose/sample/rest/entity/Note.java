@@ -1,6 +1,7 @@
 package io.github.notablogger.springxpose.sample.rest.entity;
 
 import io.github.notablogger.springxpose.annotation.ExposeEntity;
+import io.github.notablogger.springxpose.annotation.AuthType;
 import io.github.notablogger.springxpose.annotation.StoreType;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;

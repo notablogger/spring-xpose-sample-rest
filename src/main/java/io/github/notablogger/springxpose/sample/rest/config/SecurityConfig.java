@@ -39,8 +39,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/actuator/**"
                 ).permitAll()
-                // ⚠️  DEVELOPMENT ONLY: In production, implement proper endpoint security
-                .anyRequest().permitAll()
+                // Deny by default so only explicitly configured resource chains are reachable.
+                .anyRequest().denyAll()
             )
             .csrf(csrf -> csrf.disable())  // ⚠️  DEVELOPMENT ONLY: enable CSRF in production
             .headers(h -> h.frameOptions(fo -> fo.disable()));  // ⚠️  only needed for H2 console in dev

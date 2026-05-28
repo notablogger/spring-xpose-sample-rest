@@ -47,7 +47,7 @@ By default this starts:
 - PostgreSQL at `localhost:5432` (`db: xpose`, `user: xpose`, `password: xpose`)
 - MongoDB at `localhost:27017` (`db: xpose`)
 
-PostgreSQL schema + sample relational data are applied from startup SQL scripts (`db/sql/schema.sql` and `db/sql/data.sql`). Mongo `notes` sample documents are initialized by `docker/mongo/init-notes.js`.
+PostgreSQL schema is auto-created by Hibernate (`ddl-auto=update`) and sample relational data is seeded from `db/sql/data.sql`. Mongo `notes` sample documents are initialized by `docker/mongo/init-notes.js`.
 
 If you want a fully fresh seed state, recreate containers and volumes first:
 
@@ -310,7 +310,7 @@ The generated `ProductDto` contains `id`, `name`, `price`, and `category` — bu
 | Username | Password | Role | Access |
 |---|---|---|---|
 | `customer` | `customer123` | `ROLE_CUSTOMER` | GET only |
-| `admin` | `admin123` | `ROLE_ADMIN` | Full CRUD |
+| `admin` | `admin123` | `ROLE_ADMIN` | GET + POST + PUT (`DELETE` not exposed for `Order`) |
 
 ---
 
@@ -319,7 +319,6 @@ The generated `ProductDto` contains `id`, `name`, `price`, and `category` — bu
 ```
 src/main/java/.../
   RestSampleApplication.java      ← @SpringBootApplication entry point
-  DataLoader.java                 ← Legacy runner (disabled by default; SQL init scripts now seed relational data)
   config/
     SampleExceptionHandler.java   ← Sample override for sanitized constraint violation responses
     SecurityConfig.java           ← Fallback chain (Swagger UI + docs)
@@ -331,8 +330,7 @@ src/main/java/.../
 
 src/main/resources/
   db/sql/
-    schema.sql                    ← Relational schema for PostgreSQL/H2
-    data.sql                      ← Relational sample data
+    data.sql                      ← Relational sample seed data (schema is Hibernate-managed)
 
 docker/mongo/
   init-notes.js                   ← Mongo sample notes seed script

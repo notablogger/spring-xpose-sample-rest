@@ -11,7 +11,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 @Table(name = "orders")
 @ExposeEntity(
     path = "orders",
-    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE},
+    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE},
     authType = AuthType.BASIC,
     readRoles  = {"CUSTOMER", "ADMIN"},
     writeRoles = {"ADMIN"}

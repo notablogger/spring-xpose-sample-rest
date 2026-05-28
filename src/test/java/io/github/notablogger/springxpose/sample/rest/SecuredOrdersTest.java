@@ -48,7 +48,7 @@ class SecuredOrdersTest {
     }
 
     @Test
-    void admin_fullLifecycle() throws Exception {
+    void admin_createReadUpdateLifecycle() throws Exception {
         MvcResult result = mvc.perform(post("/api/orders")
                         .with(httpBasic("admin", "admin123"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,8 +80,6 @@ class SecuredOrdersTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        mvc.perform(delete("/api/orders/" + id).with(httpBasic("admin", "admin123")))
-                .andExpect(status().isNoContent());
     }
 
     private long extractId(String json) {
