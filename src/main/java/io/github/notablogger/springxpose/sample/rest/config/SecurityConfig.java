@@ -2,6 +2,7 @@ package io.github.notablogger.springxpose.sample.rest.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -12,8 +13,20 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.core.annotation.Order;
 
+/**
+ * Development-only security configuration for the sample application.
+ *
+ * This fallback chain permits Swagger UI, API docs, and all API endpoints for demo purposes.
+ *
+ * ⚠️  IN PRODUCTION: Implement proper authentication and authorization based on your security requirements.
+ *     - Enable OAuth2 resource server for JWT validation (uncomment in application.yml)
+ *     - Use database-backed user details instead of in-memory users
+ *     - Implement selective CSRF protection (not globally disabled)
+ *     - Remove in-memory test credentials
+ */
 @Configuration
 @EnableWebSecurity
+@Profile("!prod")  // Disable this config in production profile
 public class SecurityConfig {
 
     @Bean
@@ -24,16 +37,20 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/v3/api-docs/**",
-                    "/h2-console/**",
                     "/actuator/**"
                 ).permitAll()
+                // ⚠️  DEVELOPMENT ONLY: In production, implement proper endpoint security
                 .anyRequest().permitAll()
             )
-            .csrf(csrf -> csrf.disable())
-            .headers(h -> h.frameOptions(fo -> fo.disable()));
+            .csrf(csrf -> csrf.disable())  // ⚠️  DEVELOPMENT ONLY: enable CSRF in production
+            .headers(h -> h.frameOptions(fo -> fo.disable()));  // ⚠️  only needed for H2 console in dev
         return http.build();
     }
 
+    /**
+     * ⚠️  DEVELOPMENT ONLY: In-memory test users.
+     * Replace with database-backed UserDetailsService or OAuth2 in production.
+     */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         return new InMemoryUserDetailsManager(
@@ -57,4 +74,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
 

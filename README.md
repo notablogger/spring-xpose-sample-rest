@@ -365,6 +365,37 @@ This launches `postgres`, `mongo`, and `rest-sample` together.
 
 ---
 
+## Using `spring-xpose` in Production
+
+The sample app demonstrates the library's capabilities. To deploy a real service:
+
+1. **Authentication & Authorization**
+   - Enable OAuth2 resource server with real JWKS provider (uncomment in `application.yml`)
+   - Integrate with your identity provider (Keycloak, Auth0, etc.)
+   - Replace in-memory users with database or external auth service
+
+2. **Configuration Management**
+   - Use environment-specific profiles (`prod`, `staging`, `dev`)
+   - Set sensitive values (DB credentials, JWKS URIs) via environment variables or secrets manager
+   - Disable SQL logging and auto-index creation in production
+
+3. **Database Migration**
+   - Use Flyway or Liquibase for schema versioning instead of `spring.sql.init.mode: always`
+   - Test migrations in staging before production deployments
+
+4. **Monitoring & Observability**
+   - Enable Spring Boot Actuator endpoints (health, metrics)
+   - Configure structured logging (JSON format)
+   - Use distributed tracing for multi-service deployments
+
+5. **Security Hardening**
+   - Enable CSRF protection based on your SPA/client architecture
+   - Set appropriate CORS policies
+   - Use HTTPS only in production
+   - Implement rate limiting and DDoS protection
+
+---
+
 ## License
 
 Apache 2.0

@@ -43,6 +43,10 @@ services:
       SPRING_DATASOURCE_USERNAME: xpose
       SPRING_DATASOURCE_PASSWORD: xpose
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/xpose
+      # Production-safe defaults (can be overridden for dev):
+      SPRING_SQL_INIT_MODE: ${SPRING_SQL_INIT_MODE:-never}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-false}
+      SPRING_DATA_MONGODB_AUTO_INDEX: ${SPRING_DATA_MONGODB_AUTO_INDEX:-false}
       SERVER_PORT: 8080
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/v3/api-docs || exit 1"]

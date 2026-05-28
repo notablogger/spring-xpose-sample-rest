@@ -8,16 +8,16 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}  # set to true only in dev
   sql:
     init:
-      mode: always
+      mode: ${SPRING_SQL_INIT_MODE:never}  # set to always only for local dev with docker-compose
       schema-locations: classpath:db/sql/schema.sql
       data-locations: classpath:db/sql/data.sql
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/xpose}
-      auto-index-creation: true
+      auto-index-creation: ${SPRING_DATA_MONGODB_AUTO_INDEX:false}  # set to true only in dev
   # OAuth2 resource server — disabled by default in this sample.
   # Uncomment and point to your JWKS URI to enable JWT validation on /api/reports.
   # security:
