@@ -12,7 +12,8 @@ import jakarta.validation.constraints.Positive;
     path = "products",
     expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE},
     relationMode = RelationMode.ALWAYS_OBJECT,
-    ignoredFields = {"description"}   // description stored in DB but not exposed via API
+    ignoredFields = {"description"},
+    filterableFields = {"name"}   // GET /api/products?name=Widget
 )
 public class Product {
 
