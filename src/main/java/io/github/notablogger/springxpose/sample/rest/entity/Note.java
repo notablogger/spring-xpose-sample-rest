@@ -14,6 +14,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *   <li>Uses {@code @org.springframework.data.annotation.Id} (not Jakarta Persistence).</li>
  *   <li>spring-xpose generates a {@code MongoRepository} instead of {@code JpaRepository}.</li>
  *   <li>No {@code EntityManager} is injected — no JPA transactions.</li>
+ *   <li>{@code filterableFields = {"author"}} generates {@code GET /api/notes?author=Alice}
+ *       using Spring Data MongoDB {@code Criteria} via {@code MongoTemplate}.</li>
  * </ul>
  */
 @Document(collection = "notes")
@@ -21,7 +23,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
     path       = "notes",
     authType   = AuthType.BASIC,
     readRoles  = {"CUSTOMER", "ADMIN"},
-    writeRoles = {"ADMIN"}
+    writeRoles = {"ADMIN"},
+    filterableFields = {"author"}   // GET /api/notes?author=Alice
 )
 public class Note {
 
@@ -36,8 +39,6 @@ public class Note {
 
     private String author;
 
-    // ── Getters / Setters ──────────────────────────────────────────────────
-
     public String getId()           { return id; }
     public void   setId(String id)  { this.id = id; }
 
@@ -50,4 +51,3 @@ public class Note {
     public String getAuthor()               { return author; }
     public void   setAuthor(String author)  { this.author = author; }
 }
-

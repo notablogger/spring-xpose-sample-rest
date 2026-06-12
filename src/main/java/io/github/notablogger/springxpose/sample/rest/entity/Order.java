@@ -14,7 +14,8 @@ import jakarta.validation.constraints.PositiveOrZero;
     expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE},
     authType = AuthType.BASIC,
     readRoles  = {"CUSTOMER", "ADMIN"},
-    writeRoles = {"ADMIN"}
+    writeRoles = {"ADMIN"},
+    filterableFields = {"status"}   // GET /api/orders?status=PENDING
 )
 public class Order {
 
@@ -49,4 +50,3 @@ public class Order {
     public Product getProduct() { return product; }
     public void setProduct(Product product) { this.product = product; }
 }
-
