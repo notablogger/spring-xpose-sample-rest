@@ -30,10 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Clean Code     34.99  Books         bestseller
  * Mystery Box     9.99  —             —
  *
- * Order        status     product
- * ORD-0001     PENDING    Laptop Pro
- * ORD-0002     SHIPPED    Clean Code
- * ORD-0003     CANCELLED  Laptop Pro
+ * Order        status     amount    product      (Order is pageable — responses are pages)
+ * ORD-0001     PENDING    1299.99   Laptop Pro
+ * ORD-0002     SHIPPED      34.99   Clean Code
+ * ORD-0003     CANCELLED  1299.99   Laptop Pro
  * </pre>
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -111,18 +111,18 @@ class FilterTest {
                 .andExpect(jsonPath("$[*].name", containsInAnyOrder("Laptop Pro", "Clean Code", "Mystery Box")));
     }
 
-    // ── Order (BASIC auth) ────────────────────────────────────────────────────
+    // ── Order (BASIC auth, pageable = true → responses are pages) ─────────────
 
     @Test
     void order_statusNotInAndReferenceLike() throws Exception {
         mvc.perform(get("/api/orders").param("status_not_in", "CANCELLED")
                         .with(httpBasic("customer", "customer123")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].reference", containsInAnyOrder("ORD-0001", "ORD-0002")));
+                .andExpect(jsonPath("$.content[*].reference", containsInAnyOrder("ORD-0001", "ORD-0002")));
 
         mvc.perform(get("/api/orders").param("status", "SHIPPED").param("reference_like", "ord-000")
                         .with(httpBasic("customer", "customer123")))
-                .andExpect(jsonPath("$[*].reference", containsInAnyOrder("ORD-0002")));
+                .andExpect(jsonPath("$.content[*].reference", containsInAnyOrder("ORD-0002")));
     }
 
     @Test
@@ -132,7 +132,24 @@ class FilterTest {
         mvc.perform(get("/api/orders").param("productId", String.valueOf(laptop))
                         .with(httpBasic("customer", "customer123")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].reference", containsInAnyOrder("ORD-0001", "ORD-0003")));
+                .andExpect(jsonPath("$.content[*].reference", containsInAnyOrder("ORD-0001", "ORD-0003")));
+    }
+
+    @Test
+    void order_filtersCombineWithPagingAndSorting() throws Exception {
+        // 2 orders match; page size 1, highest amount first → ORD-0001 (1299.99) on page 0, ORD-0002 on page 1
+        mvc.perform(get("/api/orders").param("status_not_in", "CANCELLED")
+                        .param("page", "0").param("size", "1").param("sort", "totalAmount,desc")
+                        .with(httpBasic("customer", "customer123")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].reference", containsInAnyOrder("ORD-0001")))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        mvc.perform(get("/api/orders").param("status_not_in", "CANCELLED")
+                        .param("page", "1").param("size", "1").param("sort", "totalAmount,desc")
+                        .with(httpBasic("customer", "customer123")))
+                .andExpect(jsonPath("$.content[*].reference", containsInAnyOrder("ORD-0002")));
     }
 
     // ── Category: to-many relation ────────────────────────────────────────────

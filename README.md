@@ -12,7 +12,7 @@ Five real-world scenarios, each demonstrating a different spring-xpose configura
 |---|---|---|---|---|---|---|
 | `Category` | None (public) | — | — | — | `name_like`, `products_in` | Zero-config public CRUD, to-many relation filter |
 | `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | `name`, `name_like`, `price_gte` / `_lte`, `categoryId`, `categoryId_in` / `_is_null`, `tags_in` / `_not_in` / `_is_null` | Relation as full object; hidden field; scalar, relation and collection filters |
-| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | `status`, `status_in` / `_not_in`, `reference_like`, `totalAmount_gte` / `_lte`, `productId` | Role-based read/write split |
+| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | `status`, `status_in` / `_not_in`, `reference_like`, `totalAmount_gte` / `_lte`, `productId` | Role-based read/write split; `pageable = true` (filters + `page` / `size` / `sort`) |
 | `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `score_gte` | JWT-protected CRUD and role-based access |
 | `Note` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `author`, `author_in` | MongoDB document CRUD via `@ExposeDocument` |
 
@@ -154,7 +154,8 @@ curl -i http://localhost:8080/api/orders
 **List orders as customer:**
 ```bash
 curl -u customer:customer123 http://localhost:8080/api/orders
-# → [{"id":1,"reference":"ORD-0001","totalAmount":1299.99,"status":"PENDING","productId":1}, ...]
+# → {"content":[{"id":1,"reference":"ORD-0001","totalAmount":1299.99,"status":"PENDING","productId":1}, ...],
+#    "totalElements":3,"totalPages":1,"number":0,"size":20, ...}
 ```
 
 **Create an order as admin:**
@@ -358,6 +359,10 @@ curl "http://localhost:8080/api/products?tags_is_null=true"         # Mystery Bo
 # Orders (Basic auth): exclude cancelled, by product id
 curl -u customer:customer123 "http://localhost:8080/api/orders?status_not_in=CANCELLED"
 curl -u customer:customer123 "http://localhost:8080/api/orders?productId=1"
+
+# Orders are pageable — filters combine with page / size / sort
+curl -u customer:customer123 "http://localhost:8080/api/orders?status_not_in=CANCELLED&page=0&size=1&sort=totalAmount,desc"
+# → {"content":[{"reference":"ORD-0001",...}],"totalElements":2,"totalPages":2,"number":0,"size":1, ...}
 
 # Categories containing a given product (to-many relation)
 curl "http://localhost:8080/api/categories?products_in=1"

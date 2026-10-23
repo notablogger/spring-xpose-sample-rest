@@ -17,7 +17,8 @@ import static io.github.notablogger.springxpose.annotation.FilterOperation.*;
     expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE},
     authType = AuthType.BASIC,
     readRoles  = {"CUSTOMER", "ADMIN"},
-    writeRoles = {"ADMIN"}
+    writeRoles = {"ADMIN"},
+    pageable   = true                                            // ?page=0&size=20&sort=totalAmount,desc
 )
 public class Order {
 
