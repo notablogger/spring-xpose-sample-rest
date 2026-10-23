@@ -8,13 +8,13 @@ A runnable Spring Boot sample demonstrating **[spring-xpose](https://github.com/
 
 Five real-world scenarios, each demonstrating a different spring-xpose configuration:
 
-| Entity | Auth | Roles | Relation mode | `ignoredFields` | What it demonstrates |
-|---|---|---|---|---|---|
-| `Category` | None (public) | — | — | — | Zero-config public CRUD |
-| `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | Relation as full object; field hidden from API |
-| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | Role-based read/write split |
-| `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | JWT-protected CRUD and role-based access |
-| `Note` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | — | — | MongoDB document CRUD via `@ExposeDocument` |
+| Entity | Auth | Roles | Relation mode | Hidden fields | Filters (`@ExposeField`) | What it demonstrates |
+|---|---|---|---|---|---|---|
+| `Category` | None (public) | — | — | — | `name_like`, `products_in` | Zero-config public CRUD, to-many relation filter |
+| `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | `name`, `name_like`, `price_gte` / `_lte`, `categoryId`, `categoryId_in` / `_is_null`, `tags_in` / `_not_in` / `_is_null` | Relation as full object; hidden field; scalar, relation and collection filters |
+| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | `status`, `status_in` / `_not_in`, `reference_like`, `totalAmount_gte` / `_lte`, `productId` | Role-based read/write split |
+| `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `score_gte` | JWT-protected CRUD and role-based access |
+| `Note` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `author`, `author_in` | MongoDB document CRUD via `@ExposeDocument` |
 
 No controllers, repositories, DTOs, request DTOs, mappers, or security configs were written by hand. Everything is generated at compile time.
 
@@ -127,7 +127,7 @@ curl http://localhost:8080/api/categories
 # → [{"id":1,"name":"Electronics","description":"Gadgets and devices"}, ...]
 ```
 
-**List products — notice `description` is absent (ignoredFields):**
+**List products — notice `description` is absent (`@ExposeField(hidden = true)`):**
 ```bash
 curl http://localhost:8080/api/products
 # → [{"id":1,"name":"Laptop Pro","price":1299.99,"category":{"id":1,"name":"Electronics",...}}, ...]
@@ -271,7 +271,9 @@ CategoryController.java          ← @RestController at /api/categories
 CategorySecurityConfigurer.java  ← permitAll() SecurityFilterChain
 
 ProductRepository.java
-ProductDto.java                  ← no 'description' field (ignoredFields = {"description"})
+ProductDto.java                  ← no 'description' field (@ExposeField(hidden = true))
+ProductFilterParams.java         ← one property per filter: name, nameLike, priceGte, categoryId, tagsIn, …
+ProductSpec.java                 ← turns the filters into a JPA Specification
 ProductRequestDto.java
 ProductMapper.java
 ProductController.java
@@ -296,27 +298,76 @@ These are real `.java` files — open them in your IDE, read them, set breakpoin
 
 ---
 
-## Step 6 — Understand `ignoredFields`
+## Step 6 — Hide a field with `@ExposeField(hidden = true)`
 
 Open `Product.java`:
 
 ```java
-@Entity
-@ExposeEntity(
-    path         = "products",
-    relationMode = RelationMode.ALWAYS_OBJECT,
-    ignoredFields = {"description"}    // ← stored in DB, never returned in the API
-)
-public class Product {
-    @Id private Long id;
-    private String name;
-    private Double price;
-    private String description;        // ← persisted, but absent from ProductDto
-    @ManyToOne Category category;
-}
+@ExposeField(hidden = true)        // ← stored in DB, never returned or accepted by the API
+private String description;
 ```
 
-The generated `ProductDto` contains `id`, `name`, `price`, and `category` — but no `description`. The database column still exists; the field is just hidden from API consumers.
+The generated `ProductDto` and `ProductRequestDto` contain no `description`. The database column still exists; the field is just hidden from API consumers. A hidden field can't have filters either — that would let clients guess its value — so `?description=…` is simply ignored.
+
+> Upgrading from 3.x? `ignoredFields = {"description"}` on `@ExposeEntity` was replaced by `@ExposeField(hidden = true)` on the field.
+
+---
+
+## Step 7 — Filter the lists with `@ExposeField(filterOperations = …)`
+
+Every `findAll` endpoint (`GET /api/<path>`) accepts the filters declared on the entity's fields. All filters are optional and combine with AND. Filters apply to the list endpoint only — not to `GET /api/<path>/{id}`.
+
+```java
+// Product.java
+@ExposeField(filterOperations = {EQ, LIKE})                  // ?name=Clean Code  ?name_like=laptop
+private String name;
+
+@ExposeField(filterOperations = {GTE, LTE})                  // ?price_gte=50&price_lte=500
+private Double price;
+
+@ManyToOne
+@ExposeField(filterOperations = {EQ, IN, IS_NULL})           // ?categoryId=1  ?categoryId_in=1,2  ?categoryId_is_null=true
+private Category category;
+
+@ElementCollection
+@ExposeField(filterOperations = {IN, NOT_IN, IS_NULL})       // ?tags_in=sale,new  ?tags_not_in=sale  ?tags_is_null=true
+private List<String> tags;
+```
+
+Try them (seed data: *Laptop Pro* — Electronics, 1299.99, tags `sale`, `new`; *Clean Code* — Books, 34.99, `bestseller`; *Mystery Box* — no category, 9.99, no tags):
+
+```bash
+# Case-insensitive contains
+curl "http://localhost:8080/api/products?name_like=laptop"
+# → [{"name":"Laptop Pro",...}]
+
+# Price range
+curl "http://localhost:8080/api/products?price_gte=30&price_lte=100"
+# → [{"name":"Clean Code",...}]
+
+# By related entity id, and products without a category
+curl "http://localhost:8080/api/products?categoryId=1"
+curl "http://localhost:8080/api/products?categoryId_is_null=true"
+# → [{"name":"Mystery Box",...}]
+
+# Collection: has any of / has none of / empty
+curl "http://localhost:8080/api/products?tags_in=sale,bestseller"   # Laptop Pro, Clean Code
+curl "http://localhost:8080/api/products?tags_not_in=sale"          # Clean Code, Mystery Box
+curl "http://localhost:8080/api/products?tags_is_null=true"         # Mystery Box
+
+# Orders (Basic auth): exclude cancelled, by product id
+curl -u customer:customer123 "http://localhost:8080/api/orders?status_not_in=CANCELLED"
+curl -u customer:customer123 "http://localhost:8080/api/orders?productId=1"
+
+# Categories containing a given product (to-many relation)
+curl "http://localhost:8080/api/categories?products_in=1"
+
+# A value of the wrong type → 400, keyed by the parameter
+curl "http://localhost:8080/api/products?price_gte=cheap"
+# → {"status":400,"errors":{"price_gte":"Failed to convert ..."}, ...}
+```
+
+In Swagger UI each filter shows up as its own optional, typed query parameter on the list endpoints. All operations, value formats and compile-time checks: [`@ExposeField` reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#exposefield--filtering-findall).
 
 ---
 
@@ -341,7 +392,7 @@ src/main/java/.../
     SecurityConfig.java           ← Fallback chain (Swagger UI + docs)
   entity/
     Category.java                 ← @ExposeEntity, public, full CRUD
-    Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, ignoredFields
+    Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, hidden field, filters
     Order.java                    ← @ExposeEntity, Basic auth, role-split
     Report.java                   ← @ExposeEntity, OAuth2/JWT role-split
     Note.java                     ← @ExposeDocument, MongoDB + Basic auth role-split

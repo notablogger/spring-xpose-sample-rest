@@ -2,6 +2,8 @@ package io.github.notablogger.springxpose.sample.rest.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.notablogger.springxpose.annotation.ExposeEntity;
+import io.github.notablogger.springxpose.annotation.ExposeField;
+import io.github.notablogger.springxpose.annotation.FilterOperation;
 import io.github.notablogger.springxpose.annotation.Operation;
 import io.github.notablogger.springxpose.sample.rest.mapper.CustomCategoryMapper;
 import jakarta.persistence.*;
@@ -21,12 +23,14 @@ public class Category {
     private Long id;
 
     @NotBlank
+    @ExposeField(filterOperations = FilterOperation.LIKE)        // ?name_like=book
     private String name;
 
     private String description;
 
     @JsonIgnore
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @ExposeField(filterOperations = FilterOperation.IN)          // ?products_in=1,2 → categories containing those products
     private List<Product> products;
 
     public Long getId() { return id; }
