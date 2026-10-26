@@ -8,11 +8,11 @@ A runnable Spring Boot sample demonstrating **[spring-xpose](https://github.com/
 
 Five real-world scenarios, each demonstrating a different spring-xpose configuration:
 
-| Entity | Auth | Roles | Relation mode | Hidden fields | Filters (`@ExposeField`) | What it demonstrates |
+| Entity | Auth | Roles | Relation mode | Hidden fields | Search keys (`POST …/search`) | What it demonstrates |
 |---|---|---|---|---|---|---|
-| `Category` | None (public) | — | — | — | `name_like`, `products_in` | Zero-config public CRUD, to-many relation filter |
+| `Category` | None (public) | — | — | — | — (no `SEARCH`) | Zero-config public CRUD |
 | `Product` | None (public) | — | `ALWAYS_OBJECT` | `description` | `name`, `name_like`, `price_gte` / `_lte`, `categoryId`, `categoryId_in` / `_is_null`, `tags_in` / `_not_in` / `_is_null` | Relation as full object; hidden field; scalar, relation and collection filters |
-| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | `status`, `status_in` / `_not_in`, `reference_like`, `totalAmount_gte` / `_lte`, `productId` | Role-based read/write split; `pageable = true` (filters + `page` / `size` / `sort`) |
+| `Order` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | `IDS_FOR_LIST_OBJECT_FOR_SINGLE` | — | `status`, `status_in` / `_not_in`, `reference_like`, `totalAmount_gte` / `_lte`, `productId` | Role-based read/write split (search uses the read roles); `pageable = true` (search + `page` / `size` / `sort`) |
 | `Report` | OAuth2 Bearer | read: `VIEWER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `score_gte` | JWT-protected CRUD and role-based access |
 | `Note` | HTTP Basic | read: `CUSTOMER`, `ADMIN` / write: `ADMIN` | — | — | `title_like`, `author`, `author_in` | MongoDB document CRUD via `@ExposeDocument` |
 
@@ -273,8 +273,8 @@ CategorySecurityConfigurer.java  ← permitAll() SecurityFilterChain
 
 ProductRepository.java
 ProductDto.java                  ← no 'description' field (@ExposeField(hidden = true))
-ProductFilterParams.java         ← one property per filter: name, nameLike, priceGte, categoryId, tagsIn, …
-ProductSpec.java                 ← turns the filters into a JPA Specification
+ProductSearchRequest.java        ← JSON body of POST /api/products/search: name, name_like, price_gte, categoryId, tags_in, …
+ProductSpec.java                 ← turns the search body into a JPA Specification
 ProductRequestDto.java
 ProductMapper.java
 ProductController.java
@@ -308,71 +308,84 @@ Open `Product.java`:
 private String description;
 ```
 
-The generated `ProductDto` and `ProductRequestDto` contain no `description`. The database column still exists; the field is just hidden from API consumers. A hidden field can't have filters either — that would let clients guess its value — so `?description=…` is simply ignored.
+The generated `ProductDto` and `ProductRequestDto` contain no `description`. The database column still exists; the field is just hidden from API consumers. A hidden field can't have filters either — that would let clients guess its value — so searching for `{"description": "…"}` is rejected with `400` like any unknown key.
 
 > Upgrading from 3.x? `ignoredFields = {"description"}` on `@ExposeEntity` was replaced by `@ExposeField(hidden = true)` on the field.
 
 ---
 
-## Step 7 — Filter the lists with `@ExposeField(filterOperations = …)`
+## Step 7 — Search with `Operation.SEARCH` + `@ExposeField(filterOperations = …)`
 
-Every `findAll` endpoint (`GET /api/<path>`) accepts the filters declared on the entity's fields. All filters are optional and combine with AND. Filters apply to the list endpoint only — not to `GET /api/<path>/{id}`.
+Entities that list `Operation.SEARCH` in `expose` get **`POST /api/<path>/search`**. Its JSON body takes the filters declared on the entity's fields; every key is optional and keys combine with AND. `Product`, `Order`, `Report` and `Note` expose it; `Category` doesn't, so it stays plain CRUD. `GET /api/<path>` always returns the unfiltered list.
 
 ```java
 // Product.java
-@ExposeField(filterOperations = {EQ, LIKE})                  // ?name=Clean Code  ?name_like=laptop
+@ExposeEntity(path = "products",
+    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE,
+              Operation.SEARCH}, ...)
+
+@ExposeField(filterOperations = {EQ, LIKE})                  // {"name": "Clean Code"}  {"name_like": "laptop"}
 private String name;
 
-@ExposeField(filterOperations = {GTE, LTE})                  // ?price_gte=50&price_lte=500
+@ExposeField(filterOperations = {GTE, LTE})                  // {"price_gte": 50, "price_lte": 500}
 private Double price;
 
 @ManyToOne
-@ExposeField(filterOperations = {EQ, IN, IS_NULL})           // ?categoryId=1  ?categoryId_in=1,2  ?categoryId_is_null=true
+@ExposeField(filterOperations = {EQ, IN, IS_NULL})           // {"categoryId": 1}  {"categoryId_in": [1, 2]}  {"categoryId_is_null": true}
 private Category category;
 
 @ElementCollection
-@ExposeField(filterOperations = {IN, NOT_IN, IS_NULL})       // ?tags_in=sale,new  ?tags_not_in=sale  ?tags_is_null=true
+@ExposeField(filterOperations = {IN, NOT_IN, IS_NULL})       // {"tags_in": ["sale", "new"]}  {"tags_not_in": ["sale"]}  {"tags_is_null": true}
 private List<String> tags;
 ```
 
 Try them (seed data: *Laptop Pro* — Electronics, 1299.99, tags `sale`, `new`; *Clean Code* — Books, 34.99, `bestseller`; *Mystery Box* — no category, 9.99, no tags):
 
 ```bash
+S="http://localhost:8080/api"; J="Content-Type: application/json"
+
 # Case-insensitive contains
-curl "http://localhost:8080/api/products?name_like=laptop"
+curl -X POST "$S/products/search" -H "$J" -d '{"name_like":"laptop"}'
 # → [{"name":"Laptop Pro",...}]
 
 # Price range
-curl "http://localhost:8080/api/products?price_gte=30&price_lte=100"
+curl -X POST "$S/products/search" -H "$J" -d '{"price_gte":30,"price_lte":100}'
 # → [{"name":"Clean Code",...}]
 
 # By related entity id, and products without a category
-curl "http://localhost:8080/api/products?categoryId=1"
-curl "http://localhost:8080/api/products?categoryId_is_null=true"
+curl -X POST "$S/products/search" -H "$J" -d '{"categoryId":1}'
+curl -X POST "$S/products/search" -H "$J" -d '{"categoryId_is_null":true}'
 # → [{"name":"Mystery Box",...}]
 
 # Collection: has any of / has none of / empty
-curl "http://localhost:8080/api/products?tags_in=sale,bestseller"   # Laptop Pro, Clean Code
-curl "http://localhost:8080/api/products?tags_not_in=sale"          # Clean Code, Mystery Box
-curl "http://localhost:8080/api/products?tags_is_null=true"         # Mystery Box
+curl -X POST "$S/products/search" -H "$J" -d '{"tags_in":["sale","bestseller"]}'   # Laptop Pro, Clean Code
+curl -X POST "$S/products/search" -H "$J" -d '{"tags_not_in":["sale"]}'            # Clean Code, Mystery Box
+curl -X POST "$S/products/search" -H "$J" -d '{"tags_is_null":true}'               # Mystery Box
 
-# Orders (Basic auth): exclude cancelled, by product id
-curl -u customer:customer123 "http://localhost:8080/api/orders?status_not_in=CANCELLED"
-curl -u customer:customer123 "http://localhost:8080/api/orders?productId=1"
+# No filters: {} (or no body) returns everything, like GET
+curl -X POST "$S/products/search" -H "$J" -d '{}'
 
-# Orders are pageable — filters combine with page / size / sort
-curl -u customer:customer123 "http://localhost:8080/api/orders?status_not_in=CANCELLED&page=0&size=1&sort=totalAmount,desc"
+# Orders (Basic auth): search is a read, so the CUSTOMER role may use it — creating an order still needs ADMIN
+curl -u customer:customer123 -X POST "$S/orders/search" -H "$J" -d '{"status_not_in":["CANCELLED"]}'
+curl -u customer:customer123 -X POST "$S/orders/search" -H "$J" -d '{"productId":1}'
+
+# Orders are pageable — page / size / sort stay in the query string
+curl -u customer:customer123 -X POST "$S/orders/search?page=0&size=1&sort=totalAmount,desc" -H "$J" \
+  -d '{"status_not_in":["CANCELLED"]}'
 # → {"content":[{"reference":"ORD-0001",...}],"totalElements":2,"totalPages":2,"number":0,"size":1, ...}
 
-# Categories containing a given product (to-many relation)
-curl "http://localhost:8080/api/categories?products_in=1"
+# A value of the wrong type → 400, keyed by the JSON key
+curl -X POST "$S/products/search" -H "$J" -d '{"price_gte":"cheap"}'
+# → {"status":400,"errors":{"price_gte":"Cannot deserialize value of type `java.lang.Double` ..."}, ...}
 
-# A value of the wrong type → 400, keyed by the parameter
-curl "http://localhost:8080/api/products?price_gte=cheap"
-# → {"status":400,"errors":{"price_gte":"Failed to convert ..."}, ...}
+# An unknown key (a typo, or an operation the field doesn't declare) → 400 with the allowed keys
+curl -X POST "$S/products/search" -H "$J" -d '{"price_gt":10}'
+# → {"status":400,"errors":{"price_gt":"Unknown search key 'price_gt' for Product — allowed keys: name, name_like, price_gte, ..."}, ...}
 ```
 
-In Swagger UI each filter shows up as its own optional, typed query parameter on the list endpoints. All operations, value formats and compile-time checks: [`@ExposeField` reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#exposefield--filtering-findall).
+In Swagger UI the search endpoint shows the body as one typed JSON schema (every key with its type and a description) and `{}` as the ready-to-send example; `page` / `size` / `sort` appear as query parameters on `Order`.
+
+**Why a POST?** Search only reads, but a `GET` cannot reliably carry a request body, and a body keeps the filters typed, has no URL length limit and lets unknown keys be rejected. The read-only, retry-safe HTTP `QUERY` method ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008)) is made for this and is planned in spring-xpose once Spring supports it, with the same JSON body. All operations, value formats, compile-time checks and the full reasoning: [search filters reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#exposefield--search-filters).
 
 ---
 
@@ -397,8 +410,8 @@ src/main/java/.../
     SecurityConfig.java           ← Fallback chain (Swagger UI + docs)
   entity/
     Category.java                 ← @ExposeEntity, public, full CRUD
-    Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, hidden field, filters
-    Order.java                    ← @ExposeEntity, Basic auth, role-split
+    Product.java                  ← @ExposeEntity, public, ALWAYS_OBJECT, hidden field, SEARCH
+    Order.java                    ← @ExposeEntity, Basic auth, role-split, pageable, SEARCH
     Report.java                   ← @ExposeEntity, OAuth2/JWT role-split
     Note.java                     ← @ExposeDocument, MongoDB + Basic auth role-split
 
