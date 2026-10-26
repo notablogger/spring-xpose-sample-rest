@@ -383,7 +383,7 @@ curl -X POST "$S/products/search" -H "$J" -d '{"price_gt":10}'
 # → {"status":400,"errors":{"price_gt":"Unknown search key 'price_gt' for Product — allowed keys: name, name_like, price_gte, ..."}, ...}
 ```
 
-In Swagger UI the search endpoint shows the body as one typed JSON schema (every key with its type and a description) and `{}` as the ready-to-send example; `page` / `size` / `sort` appear as query parameters on `Order`.
+In Swagger UI the search endpoint shows the body as one typed JSON schema (every key with its type and a description) and an `example` body with every search key and a placeholder value of its type — trim it to the keys you want (`{}` returns everything). `page` / `size` / `sort` appear as query parameters on `Order`.
 
 **Why a POST?** Search only reads, but a `GET` cannot reliably carry a request body, and a body keeps the filters typed, has no URL length limit and lets unknown keys be rejected. The read-only, retry-safe HTTP `QUERY` method ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008)) is made for this and is planned in spring-xpose once Spring supports it, with the same JSON body. All operations, value formats, compile-time checks and the full reasoning: [search filters reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#exposefield--search-filters).
 
