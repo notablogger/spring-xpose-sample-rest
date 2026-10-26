@@ -316,7 +316,7 @@ The generated `ProductDto` and `ProductRequestDto` contain no `description`. The
 
 ## Step 7 — Search with `Operation.SEARCH` + `@ExposeField(filterOperations = …)`
 
-Entities that list `Operation.SEARCH` in `expose` get **`POST /api/<path>/search`**. Its JSON body takes the filters declared on the entity's fields; every key is optional and keys combine with AND. `Product`, `Order`, `Report` and `Note` expose it; `Category` doesn't, so it stays plain CRUD. `GET /api/<path>` always returns the unfiltered list.
+Entities that list `Operation.SEARCH` in `expose` get **`POST /api/<path>/search`**. Its JSON body takes the filters declared on the entity's fields; every key is optional and keys combine with AND. `Product`, `Order`, `Report` and `Note` expose it; `Category` doesn't, so it stays plain CRUD.
 
 ```java
 // Product.java
@@ -362,7 +362,7 @@ curl -X POST "$S/products/search" -H "$J" -d '{"tags_in":["sale","bestseller"]}'
 curl -X POST "$S/products/search" -H "$J" -d '{"tags_not_in":["sale"]}'            # Clean Code, Mystery Box
 curl -X POST "$S/products/search" -H "$J" -d '{"tags_is_null":true}'               # Mystery Box
 
-# No filters: {} (or no body) returns everything, like GET
+# No filters: {} (or no body) returns everything
 curl -X POST "$S/products/search" -H "$J" -d '{}'
 
 # Orders (Basic auth): search is a read, so the CUSTOMER role may use it — creating an order still needs ADMIN
@@ -385,7 +385,7 @@ curl -X POST "$S/products/search" -H "$J" -d '{"price_gt":10}'
 
 In Swagger UI the search endpoint shows the body as one typed JSON schema (every key with its type and a description) and an `example` body with every search key and a placeholder value of its type — trim it to the keys you want (`{}` returns everything). `page` / `size` / `sort` appear as query parameters on `Order`.
 
-**Why a POST?** Search only reads, but a `GET` cannot reliably carry a request body, and a body keeps the filters typed, has no URL length limit and lets unknown keys be rejected. The read-only, retry-safe HTTP `QUERY` method ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008)) is made for this and is planned in spring-xpose once Spring supports it, with the same JSON body. All operations, value formats, compile-time checks and the full reasoning: [search filters reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#exposefield--search-filters).
+**Why a POST?** Search only reads, but a `GET` cannot reliably carry a request body, and a body keeps the filters typed, has no URL length limit and lets unknown keys be rejected. The read-only, retry-safe HTTP `QUERY` method ([RFC 10008](https://www.rfc-editor.org/rfc/rfc10008)) is made for this and is planned in spring-xpose once Spring supports it, with the same JSON body. All operations, value formats, compile-time checks and the full reasoning: [search filters reference](https://github.com/notablogger/spring-xpose/blob/main/docs/tech/annotation-reference.md#search--post-apipathsearch).
 
 ---
 
