@@ -1,0 +1,11 @@
+# Local image: packages a jar built on the host.
+# The host build resolves spring-xpose SNAPSHOTs from ~/.m2, which the container can't see.
+# Run `./gradlew bootJar` before `docker compose up --build`.
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+COPY build/libs/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

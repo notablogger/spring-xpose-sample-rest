@@ -1,0 +1,7 @@
+# Only the boot jar is needed in the build context (see Dockerfile.local.yml)
+.git
+.gradle
+.idea
+build/*
+!build/libs/
+build/libs/*-plain.jar

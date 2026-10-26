@@ -2,6 +2,8 @@ package io.github.notablogger.springxpose.sample.rest.entity;
 
 import io.github.notablogger.springxpose.annotation.AuthType;
 import io.github.notablogger.springxpose.annotation.ExposeEntity;
+import io.github.notablogger.springxpose.annotation.ExposeField;
+import io.github.notablogger.springxpose.annotation.FilterOperation;
 import io.github.notablogger.springxpose.annotation.Operation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +12,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 @Entity
 @ExposeEntity(
     path = "reports",
-    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE},
+    expose = {Operation.FIND_ALL, Operation.FIND_BY_ID, Operation.CREATE, Operation.UPDATE, Operation.DELETE,
+              Operation.SEARCH},                                     // POST /api/reports/search
     authType   = AuthType.OAUTH2,
     readRoles  = {"VIEWER", "ADMIN"},
     writeRoles = {"ADMIN"}
@@ -22,11 +25,13 @@ public class Report {
     private Long id;
 
     @NotBlank
+    @ExposeField(filterOperations = FilterOperation.LIKE)        // {"title_like": "launch"}
     private String title;
 
     private String content;
 
     @PositiveOrZero
+    @ExposeField(filterOperations = FilterOperation.GTE)         // {"score_gte": 4.5}
     private Double score;
 
     public Long getId() { return id; }

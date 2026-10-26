@@ -28,7 +28,8 @@ services:
       retries: 10
 
   rest-sample:
-    build: .
+    build:
+      dockerfile: Dockerfile.local.yml
     container_name: spring-xpose-sample-rest
     depends_on:
       postgres:
@@ -42,7 +43,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xpose
       SPRING_DATASOURCE_USERNAME: xpose
       SPRING_DATASOURCE_PASSWORD: xpose
-      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/xpose
+      SPRING_MONGODB_URI: mongodb://mongo:27017/xpose
       # Production-safe defaults (can be overridden for dev):
       SPRING_SQL_INIT_MODE: ${SPRING_SQL_INIT_MODE:-never}
       SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-false}
