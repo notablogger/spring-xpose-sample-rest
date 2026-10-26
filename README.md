@@ -91,7 +91,7 @@ If your databases are not on default ports/credentials, pass env vars before run
 export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/xpose'
 export SPRING_DATASOURCE_USERNAME='xpose'
 export SPRING_DATASOURCE_PASSWORD='xpose'
-export SPRING_DATA_MONGODB_URI='mongodb://localhost:27017/xpose'
+export SPRING_MONGODB_URI='mongodb://localhost:27017/xpose'
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
