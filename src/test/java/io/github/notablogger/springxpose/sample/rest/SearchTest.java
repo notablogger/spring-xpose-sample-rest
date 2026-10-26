@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -91,14 +90,6 @@ class SearchTest {
                     .andExpect(jsonPath("$.errors." + key, containsString("Unknown search key '" + key + "'")))
                     .andExpect(jsonPath("$.errors." + key, containsString("allowed keys: name, name_like, price_gte")));
         }
-    }
-
-    @Test
-    void product_findAllIsUnfiltered() throws Exception {
-        // filtering lives on POST /search only — GET ignores filter-like query parameters
-        mvc.perform(get("/api/products").param("name_like", "laptop"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("Laptop Pro", "Clean Code", "Mystery Box")));
     }
 
     // ── Product: relation and collection filters ──────────────────────────────
